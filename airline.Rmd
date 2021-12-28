@@ -1,19 +1,453 @@
+
 ---
-title: "R Notebook"
-output: html_notebook
+title: "U.S Airline Statistics Report"
+author: "DS-Team1"
+date: "today"
+# date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+```{r basic, include = F}
+# use this function to conveniently load libraries and work smoothly with knitting
+# can add quietly=T option to the require() function
+# the loadPkg function essentially replaced/substituted two functions install.packages() and library() in one step.
+loadPkg = function(x) { if (!require(x,character.only=T, quietly =T)) { install.packages(x,dep=T,repos="http://cran.us.r-project.org"); if(!require(x,character.only=T)) stop("Package not found") } }
+# unload/detact package when done using it
+unloadPkg = function(pkg, character.only = FALSE) { 
+  if(!character.only) { pkg <- as.character(substitute(pkg)) } 
+  search_item <- paste("package", pkg,sep = ":") 
+  while(search_item %in% search()) { detach(search_item, unload = TRUE, character.only = TRUE) } 
+}
+```
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+```{r setup, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+# knitr::opts_chunk$set(include = F)
+# knitr::opts_chunk$set(echo = TRUE)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+# ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
+# use scipen=999 to prevent scientific notation at all times
+```
+Our team project focuses on the current situation of airlines during the COVID-19 pandemic. We would like to explore, analyze and visualize the current situation with the dataset from the year 2015 to 2020. This enables us to analyze the data before and after COVID. The dataset taken is "US International Air Passengers and Freight Statistics Report",from source kaggle. We have cleaned that dataset by deleting some unnecessary variables and filtering the year from 2015-2020. The resultant dataset contains over 154894 observations. The two important variables in this dataset we have performed the analysis on are the total passengers and total flights. 
 
-```{r}
+### Importing Data
+
+We start by using the dendrochronology program library(dplr) and then  load our passenger dataset and create a dataframe called **airlines**.
+We then run a couple of statistical functions like str(), summary() to get the details of the statistical description, variables, datatype,length, etc.
+
+```{r,results='markup'}
 library(dplyr)
 airlines <- data.frame(read.csv("International_Report_Passengers.csv"))
 str(airlines)
 ```
+Once we have analyzed the data, we check on the missing values and if the variables are categorical or numeric. We decide to convert the variables **carriergroup** and **Year** to factor for better statistical modeling.
+
+### Cleaning the data
+```{r,results='markup'}
+airlines$carriergroup <- as.factor(airlines$carriergroup)
+airlines$Year <- as.factor(airlines$Year)
+str(airlines)
+```
 
 
+### Dividing the data yearwise
+```{r, results='markup'}
+s_2015 <- subset(airlines,Year == 2015)
+s_2016 <- subset(airlines,Year == 2016)
+s_2017 <- subset(airlines,Year == 2017)
+s_2018 <- subset(airlines,Year == 2018)
+s_2019 <- subset(airlines,Year == 2019)
+s_2020 <- subset(airlines,Year == 2020)
+```
+Since we are using data from 2015 to 2020, we subset it year wise to s_2015, s_2016, etc. for better and easier usage.
+
+We have framed four smart questions to get a specific idea and to understand our dataset better. 
+
+The first smart question helps us find the top 10 airports having the highest number of passengers.
+
+### SMART question 1: Top 10 busiest airports in the U.S.
+
+```{r,results='markup'}
+#Top 10 busy airports 
+library(dplyr)
+topp_10 <- airlines %>%
+	group_by(US_Gateway_AirportCode) %>%
+	summarise(Total_Passengers = sum(Total)) %>%
+	arrange(desc(Total_Passengers)) %>%
+  	top_n(10)
+topp_10
+```
+We can note that JFK stands first in being the busiest airport in the US among all. LAX and MIA have nearly the same values. With the help of such dataset, we can get a quick view on which airport currently the bussiest.
+
+The next smart question discusses the number of flights that travel per month in a year.
+
+### SMART question 2: Monthly total number of flights (2015-2020)
+
+```{r,results='markup'}
+f_2015 = as.data.frame(table(s_2015$Month))
+names(f_2015)[names(f_2015) == "Var1"] <- "Month"
+names(f_2015)[names(f_2015) == "Freq"] <- "No_of_Flights"
+f_2015
+f_2016 = as.data.frame(table(s_2016$Month))
+names(f_2016)[names(f_2016) == "Var1"] <- "Month"
+names(f_2016)[names(f_2016) == "Freq"] <- "No_of_Flights"
+f_2016
+f_2017 = as.data.frame(table(s_2017$Month))
+names(f_2017)[names(f_2017) == "Var1"] <- "Month"
+names(f_2017)[names(f_2017) == "Freq"] <- "No_of_Flights"
+f_2017
+f_2018 = as.data.frame(table(s_2018$Month))
+names(f_2018)[names(f_2018) == "Var1"] <- "Month"
+names(f_2018)[names(f_2018) == "Freq"] <- "No_of_Flightss"
+f_2018
+f_2019 = as.data.frame(table(s_2019$Month))
+names(f_2019)[names(f_2019) == "Var1"] <- "Month"
+names(f_2019)[names(f_2019) == "Freq"] <- "No_of_Flights"
+f_2019
+f_2020 = as.data.frame(table(s_2020$Month))
+names(f_2020)[names(f_2020) == "Var1"] <- "Month"
+names(f_2020)[names(f_2020) == "Freq"] <- "No_of_Flights"
+f_2020
+```
+We can see that the minimum number of flights take off monthly every year from 2015-2020 is 2000. However, in the year 2020, only 3 months of data is recorded. This is due to the lockdown and travel ban that had been imposed over the airlines to and from the United States due the start of pandemic.
+
+### Histogram showing monthly flights for each year
+```{r,results='markup'}
+#hist(s_2015$Month,col = "green", freq = TRUE, main = "Histogram plot showing Monthly Flights for 2015", xlab = "Months",ylab = "Flights",breaks=rep(1:12,each=2)+c(-.4,.4))
+#hist(s_2016$Month,col = "green", freq = TRUE, main = "Histogram plot showing Monthly Flights for 2016", xlab = "Months",ylab = "Flights",breaks=rep(1:12,each=2)+c(-.4,.4))
+#hist(s_2017$Month,col = "green", freq = TRUE, main = "Histogram plot showing Monthly Flights for 2017", xlab = "Months",ylab = "Flights",breaks=rep(1:12,each=2)+c(-.4,.4))
+#hist(s_2018$Month,col = "green", freq = TRUE, main = "Histogram plot showing Monthly Flights for 2018", xlab = "Months",ylab = "Flights",breaks=rep(1:12,each=2)+c(-.4,.4))
+#hist(s_2019$Month,col = "green", freq = TRUE, main = "Histogram plot showing Monthly Flights for 2019", xlab = "Months",ylab = "Flights",breaks=rep(1:12,each=2)+c(-.4,.4))
+#hist(s_2020$Month,col = "green", freq = TRUE, main = "Histogram plot showing Monthly Flights for 2020", xlab = "Months",ylab = "Flights",breaks=rep(1:12,each=2)+c(-.4,.4))
+```
+
+```{r,results='markup'}
+install.packages("gridExtra")         
+library("gridExtra") 
+library(ggplot2)
+p1 <- ggplot(s_2015, aes(x=Month)) + geom_histogram(color="black", fill="green", binwidth = 0.5)+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Histogram plot showing \n Monthly Flights for 2015")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p2 <- ggplot(s_2016, aes(x=Month)) + geom_histogram(color="black", fill="green", binwidth = 0.5)+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Histogram plot showing \n Monthly Flights for 2016")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p3 <- ggplot(s_2017, aes(x=Month)) + geom_histogram(color="black", fill="green", binwidth = 0.5)+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Histogram plot showing \n Monthly Flights for 2017")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p4 <- ggplot(s_2018, aes(x=Month)) + geom_histogram(color="black", fill="green", binwidth = 0.5)+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Histogram plot showing \n Monthly Flights for 2018")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p5 <- ggplot(s_2019, aes(x=Month)) + geom_histogram(color="black", fill="green", binwidth = 0.5)+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Histogram plot showing \n Monthly Flights for 2019")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p6 <- ggplot(s_2020, aes(x=Month)) + geom_histogram(color="black", fill="green", binwidth = 0.5)+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Histogram plot showing \n Monthly Flights for 2020")+ theme(plot.title = element_text(size = 10, face = "bold"))
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3, nrow = 2)
+```
+A histogram is a bar graph like representation of data that buckets a range of outcomes into columns along the x-axis. The y-axis represents the number of counts or percentage of occurrence in the data for each column and can be used to visualize data distributions. The histogram here shows the monthly flights data from the year 2015 to 2020. For the year 2015 we can see that the month of December has the highest number of flights which is approximately equal to 2450. Similarly, we can check the data from the years 2016 to 2020.
+
+### Monthly total Number of passengers (2015-2020)
+
+Here, we found the total monthly passengers flying each year by grouping the month data with the sum of total passengers. 
+
+```{r,results='markup'}
+p_2015 <- s_2015 %>%
+	group_by(Month) %>%
+	summarise(Total_Passengers = sum(Total))
+p_2015
+p_2016 <- s_2016 %>%
+	group_by(Month) %>%
+	summarise(Total_Passengers = sum(Total))
+p_2016
+p_2017 <- s_2017 %>%
+	group_by(Month) %>%
+	summarise(Total_Passengers = sum(Total))
+p_2017
+p_2018 <- s_2018 %>%
+	group_by(Month) %>%
+	summarise(Total_Passengers = sum(Total))
+p_2018
+p_2019 <- s_2019 %>%
+	group_by(Month) %>%
+	summarise(Total_Passengers = sum(Total))
+p_2019
+p_2020 <- s_2020 %>%
+	group_by(Month) %>%
+	summarise(Total_Passengers = sum(Total))
+p_2020
+```
 
 
+### Barplots showing Monthly total passengers for each year
+```{r,results='markup'}
+#barplot(p_2015$Total_Passengers,names.arg=p_2015$Month,xlab="Month",ylab="Total_Passenger",col="blue",main="Monthly passengers for 2015",border="red")
+#barplot(p_2016$Total_Passengers,names.arg=p_2016$Month,xlab="Month",ylab="Total_Passenger",col="blue",main="Monthly passengers for 2016",border="red")
+#barplot(p_2017$Total_Passengers,names.arg=p_2017$Month,xlab="Month",ylab="Total_Passenger",col="blue",main="Monthly passengers for 2017",border="red")
+#barplot(p_2018$Total_Passengers,names.arg=p_2018$Month,xlab="Month",ylab="Total_Passenger",col="blue",main="Monthly passengers for 2018",border="red")
+#barplot(p_2019$Total_Passengers,names.arg=p_2019$Month,xlab="Month",ylab="Total_Passenger",col="blue",main="Monthly passengers for 2019",border="red")
+#barplot(p_2020$Total_Passengers,names.arg=p_2020$Month,xlab="Month",ylab="Total_Passenger",col="blue",main="Monthly passengers for 2020",border="red")
+```
 
+
+```{r,results='markup'}
+# Barplots showing Monthly total passengers for each year
+#install.packages("gridExtra")               
+library("gridExtra")
+p7 <- ggplot(data=p_2015, aes(x=Month, y=Total_Passengers)) + geom_bar(stat="identity", fill="steelblue")+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Bar Chart showing \n Monthly passengers for 2015")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p8 <- ggplot(data=p_2016, aes(x=Month, y=Total_Passengers)) + geom_bar(stat="identity", fill="steelblue")+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Bar Chart showing \n Monthly passengers for 2016")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p9 <- ggplot(data=p_2017, aes(x=Month, y=Total_Passengers)) + geom_bar(stat="identity", fill="steelblue")+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Bar Chart showing \n Monthly passengers for 2017")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p10 <- ggplot(data=p_2018, aes(x=Month, y=Total_Passengers)) + geom_bar(stat="identity", fill="steelblue")+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Bar Chart showing \n Monthly passengers for 2018")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p11 <- ggplot(data=p_2019, aes(x=Month, y=Total_Passengers)) + geom_bar(stat="identity", fill="steelblue")+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Bar Chart showing \n Monthly passengers for 2019")+ theme(plot.title = element_text(size = 10, face = "bold"))
+p12 <- ggplot(data=p_2020, aes(x=Month, y=Total_Passengers)) + geom_bar(stat="identity", fill="steelblue")+ scale_x_continuous(breaks = seq(0, 12, 1))+labs(title = "Bar Chart showing \n Monthly passengers for 2020")+ theme(plot.title = element_text(size = 10, face = "bold"))
+grid.arrange(p7, p8, p9, p10, p11, p12, ncol = 3, nrow = 2)
+```
+A barchart represents data in rectangular bars with length of the bar proportional to the value of variable. In R, we can draw both vertical and horizontal bars. Here, from the barplot it displays the data of monthly total passengers from the year 2015 to 2020. We can see year wise data and conclude that the month of July carries the highest number of passengers in 2015. We can draw similar conclusions for other years as well from the barcarts. 
+
+### Exploratory Data Analysis
+```{r,results='markup'}
+# Monthly_Passenger_Data
+Monthly_Passenger_Data <- c(p_2015$Total_Passengers, p_2016$Total_Passengers, p_2017$Total_Passengers, p_2018$Total_Passengers, p_2019$Total_Passengers, p_2020$Total_Passengers)
+cat("Summary of monthly passenger data from January 2015 to March 2020 \n")
+summary(Monthly_Passenger_Data)
+cat("\n")
+# Monthly_Flight_Data
+Monthly_Flight_Data <- c(f_2015$No_of_Flights, f_2016$No_of_Flights, f_2017$No_of_Flights, f_2018$No_of_Flights, f_2019$No_of_Flights, f_2020$No_of_Flights)
+cat("Summary of monthly flights data from January 2015 to March 2020 \n")
+summary(Monthly_Flight_Data)
+cat("\n")
+# Standard Deviation
+cat("Standard Deviation for monthly passenger data is", sd(Monthly_Passenger_Data))
+cat("Standard Deviation for monthly flight data is", sd(Monthly_Flight_Data))
+```
+```{r,results='markup'}
+##EDA :
+##Examining the distribution of a categorical variables from the dataset.
+##The height of the bar displays how many observations occurred with each x value.
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+ggplot(data = airlines) +
+  geom_bar(mapping = aes(x = carriergroup))
+##We can also compute these values manually with dplyr::count()
+airlines %>%
+  count(carriergroup)
+```
+
+Carriergroup = 1 represents domestic flights and 0 represents foreign flights.
+
+```{r,results='markup'}  
+##Q-Q Plot
+##qqnorm(): produces a normal QQ plot of the variable
+##qqline(): adds a reference line
+qqnorm(Monthly_Flight_Data, pch = 1, frame = TRUE)
+qqline(Monthly_Flight_Data, col = "steelblue", lwd = 2)
+```
+
+The Q-Q Plot or a Quantile - Quantile plot is a graphical tool to help us assess a set of data came from some theoretical distribution such as Normal or Exponential. A Q-Q plot is a scatterplot created by plotting two sets of quantiles against each other. If both sets of quantiles came from the same distribution, we should see the points forming a line that's roughly straight. Here, from the Q-Q plot we can see that half of the data lies below 0 and half of the data lies above 0. By the reference line we can establish that the data is normally distributed.
+
+
+```{r,results='markup'}
+##Boxplot 
+#boxplot(Monthly_Flight_Data, main="Boxplot for monthly flight data", xlab="No. of flights", ylab="Total", col = "Blue")
+Monthly_Flight <- data.frame(Monthly_Flight_Data)
+Monthly_Flight %>%
+  ggplot(aes(Monthly_Flight_Data)) +
+  geom_boxplot(fill="#0000FF") + 
+  ggtitle("Boxplot for monthly flight data") +coord_flip()
+```
+The Boxplot is also called as Box and Whiskers plots. These are an efficient way of representing the spread of the data graphically. The boxplot has three quantiles which are the 1st, 2nd and 3rd quantiles. The Inter Quantile Range(IQR) can be found by the difference of the first and the third quantile. The vertical and dotted which represents whiskers which is 1.5*IQR of the data. The outliers are extremely important. Here, from the boxplot the first quantile is approximately equals to 2351 and the second quantile is equals to 2583. 
+
+
+### SMART question 3.1: Impact of COVID-19 on total passengers data
+
+```{r,results='markup'}
+month_range = 1:12
+plot(month_range, p_2015$Total_Passengers , main="Monthly Variation in number of passengers 2015-2019", type = "b", col = "red", xlab = "Year", ylab = "Total Passengers", ylim=c(13000000,25000000))
+par(new = TRUE)
+plot(month_range, p_2016$Total_Passengers, type = "b", col = "blue", xlab = "Year", ylab = "Total Passengers", ylim=c(13000000,25000000))
+par(new = TRUE)
+plot(month_range, p_2017$Total_Passengers, type = "b", col = "green", xlab = "Year", ylab = "Total Passengers", ylim=c(13000000,25000000))
+par(new = TRUE)
+plot(month_range, p_2018$Total_Passengers, type = "b", col = "black", xlab = "Year", ylab = "Total Passengers", ylim=c(13000000,25000000))
+par(new = TRUE)
+plot(month_range, p_2019$Total_Passengers, type = "b", col = "magenta", xlab = "Year", ylab = "Total Passengers", ylim=c(13000000,25000000))
+axis(1, seq(1,12,1))
+legend("topleft",legend=c("Year: 2015", "Year: 2016", "Year: 2017", "Year: 2018", "Year: 2019"), col=c("red", "blue", "green", "black", "magenta"), lty=1:1, cex=0.8)
+```
+The monthly variation in the number of passengers follow similar trends from 2015 to 2019 which is expected. For example, the peak comes in July for the 4th of July holiday and there is a sharp increase in December as well due to Christmas and the New Year's eve.
+
+```{r,results='markup'}
+x_axis = 2015:2020
+# Total passengers for the month of January for all the years
+y1 <- c(p_2015$Total_Passengers[1], p_2016$Total_Passengers[1], p_2017$Total_Passengers[1], p_2018$Total_Passengers[1], p_2019$Total_Passengers[1], p_2020$Total_Passengers[1])
+# Total passengers for the month of February for all the years
+y2 <- c(p_2015$Total_Passengers[2], p_2016$Total_Passengers[2], p_2017$Total_Passengers[2], p_2018$Total_Passengers[2], p_2019$Total_Passengers[2], p_2020$Total_Passengers[2])
+# Total passengers for the month of March for all the years
+y3 <- c(p_2015$Total_Passengers[3], p_2016$Total_Passengers[3], p_2017$Total_Passengers[3], p_2018$Total_Passengers[3], p_2019$Total_Passengers[3], p_2020$Total_Passengers[3])
+# Total passengers averaged across all the months for all the years
+y4 <- c(mean(p_2015[["Total_Passengers"]]), mean(p_2016[["Total_Passengers"]]), mean(p_2017[["Total_Passengers"]]), mean(p_2018[["Total_Passengers"]]), mean(p_2019[["Total_Passengers"]]), mean(p_2020[["Total_Passengers"]]))
+  
+plot(x_axis, y1 , main="Yearly Variation in number of passengers", type = "b", col = "red", xlab = "Year", ylab = "Total Passengers", ylim=c(8500000,22000000))
+par(new = TRUE)
+plot(x_axis, y2 ,type = "b", col = "blue", axes = FALSE, xlab = "Year", ylab = "Total Passengers", ylim=c(8500000,22000000))
+par(new = TRUE)
+plot(x_axis, y3 ,type = "b", col = "green", axes = FALSE, xlab = "Year", ylab = "Total Passengers", ylim=c(8500000,22000000))
+par(new = TRUE)
+plot(x_axis, y4 ,type = "b", col = "black", axes = FALSE, xlab = "Year", ylab = "Total Passengers", ylim=c(8500000,22000000))
+legend("topleft",legend=c("January", "February", "March", "Average"), col=c("red", "blue", "green", "black"), lty=1:1, cex=0.8)
+```
+
+From the plots, we can observe that the yearly variation in total passengers for all the years from 2015 to 2019 follow similar trends. It is followed by a sudden drop in 2020 due to the pandemic. This comparison is done only for months Jan to March as we had data for only those months for 2020. We have also plotted a monthly average for all those years.
+
+### SMART question 3.2: Impact of COVID-19 on total flights data 
+
+```{r,results='markup'}
+# Total flights for the month of January for all the years
+y5 = c(f_2015$No_of_Flights[1], f_2016$No_of_Flights[1], f_2017$No_of_Flights[1], f_2018$No_of_Flights[1], f_2019$No_of_Flights[1], f_2020$No_of_Flights[1])
+# Total flights for the month of February for all the years
+y6 = c(f_2015$No_of_Flights[2], f_2016$No_of_Flights[2], f_2017$No_of_Flights[2], f_2018$No_of_Flights[2], f_2019$No_of_Flights[2], f_2020$No_of_Flights[2])
+# Total flights for the month of March for all the years
+y7 = c(f_2015$No_of_Flights[3], f_2016$No_of_Flights[3], f_2017$No_of_Flights[3], f_2018$No_of_Flights[3], f_2019$No_of_Flights[3], f_2020$No_of_Flights[3])
+# Total flights averaged across all the months for all the years
+y8 = c(mean(f_2015$No_of_Flights), mean(f_2016$No_of_Flights), mean(f_2017$No_of_Flights), mean(f_2018$No_of_Flights), mean(f_2019$No_of_Flights), mean(f_2020$No_of_Flights))
+plot(x_axis, y5 , main="Yearly Variation in number of flights", type = "b", col = "red", xlab = "Year", ylab = "Total Flights", ylim=c(2150,2700))
+par(new = TRUE)
+plot(x_axis, y6 ,type = "b", col = "blue", axes = FALSE, xlab = "Year", ylab = "Total Flights", ylim=c(2150,2700))
+par(new = TRUE)
+plot(x_axis, y7 ,type = "b", col = "green", axes = FALSE, xlab = "Year", ylab = "Total Flights", ylim=c(2150,2700))
+par(new = TRUE)
+plot(x_axis, y8 ,type = "b", col = "black", axes = FALSE, xlab = "Year", ylab = "Total Flights", ylim=c(2150,2700))
+legend("topleft",legend=c("January", "February", "March", "Average"), col=c("red", "blue", "green", "black"), lty=1:1, cex=0.8)
+```
+From the plots, we can observe that the yearly variation in flights for all the years from 2015 to 2019 follow similar trends. It is followed by a sudden drop in 2020. This comparison is done only for months Jan to March as we had data for only those months for 2020. We have also plotted a monthly average for all those years.
+
+### SMART question 4: Post pandemic expectations and predictions
+The future of airlines post COVID might be dull initially.
+
+The US airlines business post COVID-19 is expected to increase gradually.
+This conclusion is made from the following analysis.
+
+```{r,results='markup'}
+#Post Covid
+library(dplyr)
+library(scales)
+library(ggplot2)
+fancy_scientific <- function(l) {
+     # turn in to character string in scientific notation
+     l <- format(l, scientific = TRUE)
+     # quote the part before the exponent to keep all the digits
+     l <- gsub("^(.*)e", "'\\1'e", l)
+     # turn the 'e+' into plotmath format
+     l <- gsub("e", "%*%10^", l)
+     # return this as an expression
+     parse(text=l)
+}
+year = c(2015, 2016, 2017, 2018, 2019, 2020)
+#Average of Monthly passengers by year
+Monthly_Mean_By_Year = c(mean(p_2015$Total_Passengers), mean(p_2016$Total_Passengers), mean(p_2017$Total_Passengers), mean(p_2018$Total_Passengers), mean(p_2019$Total_Passengers), mean(p_2020$Total_Passengers))
+avg_year<- data.frame(year, Monthly_Mean_By_Year)
+avg_year
+avg_year %>% 
+  ggplot(aes(year, Monthly_Mean_By_Year, colour = year,group=1)) + 
+  ggtitle("Plot displaying Monthly Average Passengers from 2015-2020") +
+  geom_line()+
+  geom_point()+ scale_y_continuous(labels=fancy_scientific) 
+```
+
+
+We observe from this ggplot, the monthly average number of passengers have increased gradually every year from 2015 to 2019. As soon as the pandemic hit, it dropped suddenly in 2020. So when the COVID pandemic ends and things starts getting normal we can expect restoration of airlines to follow the same pattern as we saw every year before COVID.
+
+```{r, results='markup'}
+#Percent change in the above data
+increase15_16 = (mean(p_2016$Total_Passengers)-mean(p_2015$Total_Passengers))/mean(p_2015$Total_Passengers)*100
+increase16_17 = (mean(p_2017$Total_Passengers)-mean(p_2016$Total_Passengers))/mean(p_2016$Total_Passengers)*100
+increase17_18 = (mean(p_2018$Total_Passengers)-mean(p_2017$Total_Passengers))/mean(p_2017$Total_Passengers)*100
+increase18_19 = (mean(p_2019$Total_Passengers)-mean(p_2018$Total_Passengers))/mean(p_2018$Total_Passengers)*100
+increase19_20 = (mean(p_2020$Total_Passengers)-mean(p_2019$Total_Passengers))/mean(p_2019$Total_Passengers)*100
+percent_increase = c(increase15_16, increase16_17, increase17_18, increase18_19, increase19_20)
+year_range = c(2016, 2017, 2018, 2019, 2020 )
+per <- data.frame(year_range, percent_increase)
+per
+per %>%
+  ggplot(aes(year_range, percent_increase, colour = year_range,group=1)) + 
+  ggtitle("Plot displaying percentage change of passengers 2015-2020") +
+  geom_line()+
+  geom_point()
+```
+In the second plot, we can observe the percentage change. Seeing this graph we might assume it’s decreasing but we need to keep in mind these are percentage change.
+
+We can see in the table there's a percent increase (2015-2016,2016-2017,2017-2018,2018-2019,2019-2020). The yearly percent increase in the total passengers varies between 1% to 6.5%. So, post COVID the percent increase can be expected to be in the same range.
+
+```{r, results = 'markup'}
+#Average of Monthly flights by year
+Monthly_mean_flights_year = c(mean(f_2015$No_of_Flights), mean(f_2016$No_of_Flights), mean(f_2017$No_of_Flights), mean(f_2018$No_of_Flights), mean(f_2019$No_of_Flights), mean(f_2020$No_of_Flights) )
+avg_year_fl<- data.frame(year, Monthly_mean_flights_year)
+avg_year_fl
+avg_year %>% 
+  ggplot(aes(year, Monthly_mean_flights_year, colour = year,group=1)) + 
+  ggtitle("Plot displaying Monthly Average flights from 2015-2020") +
+  geom_line()+
+  geom_point()+ scale_y_continuous(labels=fancy_scientific) 
+```
+
+In the third plot, the line graph is plotted for monthly average flights from 2015-2020. We see a steady increase in average number of flights from 2015-2018. At the end of 2019 and early 2020 when pandemic started, the average number flights reduced.
+
+Once the lockdown and travel ban have been lifted completely, there would be more mobility of passengers and high scope for people traveling. This would also lead to an increase in the number of flights.
+
+### Predicting number of flights required to accommodate higher number of passengers post COVID
+
+Flights and passengers data is grouped according to the airport.
+
+```{r,results='markup'}
+#Airport wise totals
+library(dplyr)
+Airport_totals <- airlines %>%
+	group_by(US_Gateway_AirportCode) %>%
+	summarise(Total_Pass = sum(Total), Tot_flights = n())
+Airport_totals
+# Correlation between number of departures and number of enplaned passengers 
+cor.test(Airport_totals$Total_Pass, Airport_totals$Tot_flights)
+```
+
+After performing Pearson's correlation test, we found out that the correlation coefficient comes out to be 0.966 which means this is a strong positive relation between total passengers and the total number of departures. An increase in one results in an increase in the later.
+
+
+```{r,results='markup'}
+# Scatterplot
+plot(Airport_totals$Total_Pass, Airport_totals$Tot_flights, main="Departures vs Passengers", xlab="Total passengers ", ylab="Total departures", pch=19)
+# Best fit line
+abline(lm(Airport_totals$Tot_flights~Airport_totals$Total_Pass), col="red")
+#linear regression
+flight_pass_regression = lm(Tot_flights~Total_Pass, data = Airport_totals)
+summary(flight_pass_regression)
+```
+
+The R-squared value of the linear regression model is 0.932 which means the model can explain 93.2% of the total variability in the data. Also the best fit line shown in the scatterplot complement this result. The p-value for Total passengers is 2*e-16. A very small value like this means that the variables we chose are excellent to create a meaningful model.
+
+With the help of the linear regression model, we can predict total number of flights required to accommodate increased number of passengers post COVID. Following is the equation for the same:
+
+Tot_flights = 82.0 + (9.28e-05)*Total_Pass
+
+### Conclusion
+
+-In this project, we analyzed a dataset containing daily flights and passengers data for various airlines. Our analysis started with us combining the dates into their respective months and dividing the data year wise from 2015 to 2020. 
+
+-Next step was to form separate databases for monthly total of passengers and flights and running analyses on them. Our first tangible and publishable result was finding top ten busiest airports. 
+
+-We continued our analysis by plotting histograms, bar plots, Q-Q plots, and boxplots to determine the distribution of the passengers and flights data. These plots were studied, and we found out that the monthly variations for both the variables followed a similar trend (rise and fall in the values) irrespective of the year, till 2019. This was to be expected as the holidays fall on the same dates every year. 
+
+-After plotting the values for the year 2020, we found out a sudden decrease in the values in the month of March, which was expected as well, due to the COVID-19 outbreak.
+
+-We plotted the percentage change in the values of passengers and flights and arrived on the conclusion that we can expect the percentages to be in the same range post COVID. 
+
+-We formed a linear regression model between total enplaned passengers and total number of departures after performing a correlation test on them. 
+
+-Our final task was to predict the total number of flights an airport would need, to accommodate an increased number of passengers. This prediction would greatly help the airports to manage and allocate their resources post COVID-19. The regression model we formed helped us do the same. 
+
+-Thus, we finished our analysis of this dataset with useful conclusions and results.
+
+### References
+
+U.S.International Air Traffic data(1990-2020): Airport and airline Traffic by US and International Carriers.(2021). International_Report_Passengers.[Data file]. Retrieved from https://www.kaggle.com/parulpandey/us-international-air-traffic-data
